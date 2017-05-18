@@ -164,13 +164,20 @@ train_na_removed <- train
 df <- 10
 model_spline <- smooth.spline(x=train_fill$CompetitionDistance2, y=train_fill$Sales, df=df)
 
-predictions <- model_spline %>%
+spline_predictions <- model_spline %>%
   predict(x=test_fill$CompetitionDistance2) %>% 
-  tbl_df()
+  tbl_df() %>%
+  transmute(CompetitionDistance2 = x, Sales = y)
 
+test_fill_2 <- test_fill %>%
+  select(Id, CompetitionDistance2)
+
+spline_submission_example <- left_join(test_fill_2, spline_predictions, by="CompetitionDistance2") 
+
+
+spline_submission_example <- spline_submission_example %>% unique(Id)
 
 # Section B
-#aayam do regression
 model_SL <- lm(Sales~Store+Promo+StateHoliday+SchoolHoliday+DayOfWeek, data=train)
 
 fitted_values <- augment(model_SL, newdata = test)
@@ -179,7 +186,7 @@ submission_example <- fitted_values %>%
   mutate (Sales = .fitted) %>%
   select(Id, Sales)
 
-#Regression doesn't work well as we are just trying to draw a lin
+#Regression doesn't work well as we are just trying to draw a line
 
 # Section C
 #loess
@@ -216,6 +223,23 @@ predictions <- model_ridge %>%
 sample_submissions %>% 
   mutate(Sales = as.vector(predictions))
 
+n_folds <- 5
+
+#Cross validation for ridge regression
+#lambda_values <- 10^seq(from = 2, to = 4, length = 2500)
+lambda_values <- 10^seq(from = 1, to = 4, length = 500)
+# Using built-in function, we don't need to use our own for-loops. Note
+# alpha=0 for ridge regression
+cv_ridge <- cv.glmnet(X, y, alpha = 0, lambda=lambda_values, nfolds = n_folds)
+
+lambda_star_ridge <- cv_ridge %>% 
+  glance() %>% 
+  .[["lambda.min"]]
+lambda_star_ridge
+
+
+
+
 #Section E
 #LASSO
 model_formula <- Sales ~ Store + CompetitionDistance2
@@ -232,6 +256,19 @@ test_X <- model.matrix(model_formula, data = test_fill)[, -1]
 predictions <- model_ridge %>% 
   predict(newx=test_X, s=3) %>% 
   as.vector()
+#Cross validation for lasso
+#lambda_values <- 10^seq(from = 2, to = 4, length = 2500)
+lambda_values <- 10^seq(from = 0.1, to = 4, length = 500)
+# Using built-in function, we don't need to use our own for-loops. Note
+# alpha=0 for ridge regression
+cv_ridge <- cv.glmnet(X, y, alpha = 1, lambda=lambda_values, nfolds = n_folds)
+
+lambda_star_ridge <- cv_ridge %>% 
+  glance() %>% 
+  .[["lambda.min"]]
+lambda_star_ridge
+
+
 
 sample_submissions %>% 
   mutate(Sales = as.vector(predictions))
