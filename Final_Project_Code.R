@@ -20,28 +20,52 @@ install.packages('bisoreg')
 library(bisoreg)
 
 
-# 2. Load Data Files & Data Cleaning --------------------------------------
+# 1. Load Data Files & Data Cleaning --------------------------------------
 
 #The working directory. Make sure to modify it when you run your code
 setwd("~/Desktop/Junior Spring/Statistical Learning/Homework/Final/Team_F")
 
-train <- read_csv("Files/train.csv")
-test <- read_csv("Files/test.csv")
+#David's working directory
+setwd("/TeamF")
+
+train <- read_csv("./Files/train.csv")
+test <- read_csv("./Files/test.csv")
 sample_submissions <- read_csv("Files/sample_submission.csv")
 #supplemetal information about the stores:
-store <- read_csv("Files/store.csv")
+store <- read_csv("./Files/store.csv")
 
 #since the store info is relevant to both train and test datasets let's join them to the datasets
 train <- left_join(train,store, by="Store")
 test <- left_join(test,store,by="Store")
 
-#Since the dataset is too big, I couldn't do proper conputations so I am going to select a subset
+# 2. Cleaning The Data ---------------------------------
+
+
+#Since the dataset is too big, we couldn't do proper conputations so we decided to make a subset of it
 train <- train %>%
   sample_frac(0.1) %>% 
   mutate(Year=year(Date), Month=month(Date), DayOfMonth=day(Date))
 
 test <- test %>%
   mutate(Year=year(Date), Month=month(Date), DayOfMonth=day(Date))
+
+
+#Create some new variables!
+modified_train <- train %>% 
+  select(-Date, -Promo2SinceWeek, -PromoInterval, -Promo2SinceYear, -CompetitionOpenSinceMonth, -CompetitionOpenSinceYear) %>% 
+  mutate(StateHoliday = ifelse(is.na(StateHoliday), 0, StateHoliday)) %>% 
+  group_by(Store) %>% 
+  mutate(avg_sales_by_storetype = mean(Sales)) %>% 
+  mutate(avg_customers_by_storetype = mean(Customers)) %>% 
+  mutate(avg_distance_by_storetype = mean(CompetitionDistance)) %>% 
+  mutate(total_num_promotions = sum(Promo2)) %>% 
+  mutate(Sales_Per_Customer = signif(Sales/Customers, 5)) %>% 
+  mutate(Sales_Per_Customer = ifelse(is.na(Sales_Per_Customer), 0, Sales_Per_Customer))
+  
+
+  
+  # 3. Top 4-5 Visualizations/Tables of EDA ---------------------------------
+
 
 
 # 3. Top 4-5 Visualizations/Tables of EDA ---------------------------------
@@ -102,6 +126,15 @@ store_vs_assortment <- ggplot(train, aes(x=Assortment, y=Sales, group=Assortment
   xlab("Assortment") + theme_economist()
 
 store_vs_assortment
+
+#4d. by promotions
+# TODO Need to organize the dataset
+
+
+store_by_promotions <- ggplot(modified_train, aes(x=total_num_promotions, y=avg_sales_by_storetype, fill="green")) +
+  geom_histogram(stat="identity") +
+  ylab("Average Sales") + 
+  xlab("Total Num Sales") + theme_economist()
 
 
 # 4. Cross-Validation of Final Model --------------------------------------
