@@ -175,7 +175,7 @@ test_fill_2 <- test_fill %>%
 spline_submission_example <- left_join(test_fill_2, spline_predictions, by="CompetitionDistance2") 
 
 
-spline_submission_example <- spline_submission_example %>% unique(Id)
+spline_submission_example <- spline_submission_example %>% distinct(Id, Sales)
 
 # Section B
 model_SL <- lm(Sales~Store+Promo+StateHoliday+SchoolHoliday+DayOfWeek, data=train)
