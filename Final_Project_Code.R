@@ -60,7 +60,7 @@ modified_train <- train %>%
   mutate(total_num_promotions = sum(Promo2)) %>% 
   mutate(Sales_Per_Customer = signif(Sales/Customers, 5)) %>% 
   mutate(Sales_Per_Customer = ifelse(is.na(Sales_Per_Customer), 0, Sales_Per_Customer))
-  
+
 
 # 3. Top 4-5 Visualizations/Tables of EDA ---------------------------------
 
