@@ -16,7 +16,6 @@ library(lubridate)
 #install.packages('ggthemes')
 library(ggthemes)
 library(glmnet)
-install.packages('bisoreg')
 library(bisoreg)
 
 
@@ -62,11 +61,6 @@ modified_train <- train %>%
   mutate(Sales_Per_Customer = signif(Sales/Customers, 5)) %>% 
   mutate(Sales_Per_Customer = ifelse(is.na(Sales_Per_Customer), 0, Sales_Per_Customer))
   
-
-  
-  # 3. Top 4-5 Visualizations/Tables of EDA ---------------------------------
-
-
 
 # 3. Top 4-5 Visualizations/Tables of EDA ---------------------------------
 
